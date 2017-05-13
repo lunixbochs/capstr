@@ -60,13 +60,6 @@ func New(arch, mode int) (*Engine, error) {
 	return &Engine{handle}, nil
 }
 
-type Ins struct {
-	Addr uint64
-	Data []byte
-	Str  string
-	data [16]byte
-}
-
 func (e *Engine) Dis(code []byte, addr, count uint64) ([]Ins, error) {
 	if len(code) == 0 {
 		return nil, nil
@@ -76,36 +69,28 @@ func (e *Engine) Dis(code []byte, addr, count uint64) ([]Ins, error) {
 	var disptr *C.cs_insn
 	num := C.cs_disasm(e.handle, ptr, C.size_t(len(code)), C.uint64_t(addr), C.size_t(count), &disptr)
 	if num > 0 {
-		// reduce allocs (mnemonic + opStr)
-		var asm [32 + 32 + 160]byte
-
 		dis := (*[1 << 24]C.cs_insn)(unsafe.Pointer(disptr))[:num]
 		ret := make([]Ins, num)
 		for i, ins := range dis {
 			outins := &ret[i]
-			// index into asm[:]
-			pos := 0
 			// byte array casts of cs_ins fields
-			mne := (*[32]byte)(unsafe.Pointer(&ins.mnemonic[0]))
+			mnemonic := (*[32]byte)(unsafe.Pointer(&ins.mnemonic[0]))
 			byteData := (*[16]byte)(unsafe.Pointer(&ins.bytes[0]))
-			ops := (*[160]byte)(unsafe.Pointer(&ins.op_str[0]))
-
-			// populate the string
-			if off := bytes.IndexByte(mne[:], 0); off > 0 {
-				pos += copy(asm[:], mne[:off])
-			}
-			asm[pos] = ' '
-			pos += 1
-			if off := bytes.IndexByte(ops[:], 0); off > 0 {
-				pos += copy(asm[pos:], ops[:off])
-			}
+			opstr := (*[160]byte)(unsafe.Pointer(&ins.op_str[0]))
 
 			// populate the return ins fields
-			outins.Addr = uint64(ins.address)
+			outins.addr = uint64(ins.address)
 			// this is faster than C.GoBytes()
-			outins.Data = outins.data[:ins.size]
-			copy(outins.Data, byteData[:])
-			outins.Str = string(asm[:pos])
+			outins.dataSlice = outins.data[:ins.size]
+			copy(outins.dataSlice, byteData[:])
+
+			// populate the strings
+			if off := bytes.IndexByte(mnemonic[:], 0); off > 0 {
+				outins.mnemonic = string(mnemonic[:off])
+			}
+			if off := bytes.IndexByte(opstr[:], 0); off > 0 {
+				outins.opstr = string(opstr[:off])
+			}
 		}
 		C.free(unsafe.Pointer(disptr))
 		return ret, nil
@@ -115,4 +100,29 @@ func (e *Engine) Dis(code []byte, addr, count uint64) ([]Ins, error) {
 
 func (e *Engine) Close() error {
 	return CsError(C.cs_close(&e.handle))
+}
+
+// conforms to usercorn/models.Ins interface
+type Ins struct {
+	addr      uint64
+	dataSlice []byte
+	mnemonic  string
+	opstr     string
+	data      [16]byte
+}
+
+func (i Ins) Addr() uint64 {
+	return i.addr
+}
+
+func (i Ins) Bytes() []byte {
+	return i.dataSlice
+}
+
+func (i Ins) Mnemonic() string {
+	return i.mnemonic
+}
+
+func (i Ins) OpStr() string {
+	return i.opstr
 }
