@@ -18,6 +18,7 @@ for _, ins := range engine.Dis(code, addr, insCount) {
 Benchmarks
 -------
 ```
-BenchmarkX86-4            300000          5493 ns/op         784 B/op         22 allocs/op
-BenchmarkGapstone-4       200000          9870 ns/op        9704 B/op         54 allocs/op
+BenchmarkX86-4            300000          5460 ns/op         864 B/op         13 allocs/op
+BenchmarkGapstone-4       200000          9905 ns/op        9704 B/op         54 allocs/op
+
 ```

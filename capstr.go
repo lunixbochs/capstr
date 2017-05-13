@@ -64,6 +64,7 @@ type Ins struct {
 	Addr uint64
 	Data []byte
 	Str  string
+	data [16]byte
 }
 
 func (e *Engine) Dis(code []byte, addr, count uint64) ([]Ins, error) {
@@ -102,7 +103,7 @@ func (e *Engine) Dis(code []byte, addr, count uint64) ([]Ins, error) {
 			// populate the return ins fields
 			outins.Addr = uint64(ins.address)
 			// this is faster than C.GoBytes()
-			outins.Data = make([]byte, ins.size)
+			outins.Data = outins.data[:ins.size]
 			copy(outins.Data, byteData[:])
 			outins.Str = string(asm[:pos])
 		}
