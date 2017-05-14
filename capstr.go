@@ -69,7 +69,7 @@ func (e *Engine) Dis(code []byte, addr, count uint64) ([]Ins, error) {
 	var disptr *C.cs_insn
 	num := C.cs_disasm(e.handle, ptr, C.size_t(len(code)), C.uint64_t(addr), C.size_t(count), &disptr)
 	if num > 0 {
-		dis := (*[1 << 24]C.cs_insn)(unsafe.Pointer(disptr))[:num]
+		dis := (*[1 << 23]C.cs_insn)(unsafe.Pointer(disptr))[:num]
 		ret := make([]Ins, num)
 		for i, ins := range dis {
 			outins := &ret[i]
