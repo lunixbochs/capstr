@@ -57,6 +57,7 @@ func New(arch, mode int) (*Engine, error) {
 		return nil, CsError(cserr)
 	}
 	C.cs_option(handle, C.CS_OPT_DETAIL, C.CS_OPT_OFF)
+	C.cs_option(handle, C.CS_OPT_SKIPDATA, C.CS_OPT_ON)
 	return &Engine{handle}, nil
 }
 
