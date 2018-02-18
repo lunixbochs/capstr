@@ -40,6 +40,25 @@ const (
 	MODE_MIPS64        = C.CS_MODE_MIPS64
 )
 
+const (
+	OPT_TYPE_INVALID        = C.CS_OPT_INVALID
+	OPT_TYPE_SYNTAX         = C.CS_OPT_SYNTAX
+	OPT_TYPE_DETAIL         = C.CS_OPT_DETAIL
+	OPT_TYPE_MODE           = C.CS_OPT_MODE
+	OPT_TYPE_MEM            = C.CS_OPT_MEM
+	OPT_TYPE_SKIPDATA       = C.CS_OPT_SKIPDATA
+	OPT_TYPE_SKIPDATA_SETUP = C.CS_OPT_SKIPDATA_SETUP
+)
+
+const (
+	OPT_OFF              = C.CS_OPT_OFF
+	OPT_ON               = C.CS_OPT_ON
+	OPT_SYNTAX_DEFAULT   = C.CS_OPT_SYNTAX_DEFAULT
+	OPT_SYNTAX_INTEL     = C.CS_OPT_SYNTAX_INTEL
+	OPT_SYNTAX_ATT       = C.CS_OPT_SYNTAX_ATT
+	OPT_SYNTAX_NOREGNAME = C.CS_OPT_SYNTAX_NOREGNAME
+)
+
 type Engine struct {
 	handle C.csh
 }
@@ -58,6 +77,13 @@ func New(arch, mode int) (*Engine, error) {
 	}
 	C.cs_option(handle, C.CS_OPT_DETAIL, C.CS_OPT_OFF)
 	return &Engine{handle}, nil
+}
+
+func (e *Engine) Option(opt_type C.cs_opt_type, value C.size_t) error {
+	if cserr := C.cs_option(e.handle, opt_type, value); cserr != C.CS_ERR_OK {
+		return CsError(cserr)
+	}
+	return nil
 }
 
 func (e *Engine) Dis(code []byte, addr, count uint64) ([]Ins, error) {
