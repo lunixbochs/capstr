@@ -10,7 +10,8 @@ Usage
 import "github.com/lunixbochs/capstr"
 
 engine, err := capstr.New(capstr.ARCH_X86, capstr.MODE_32)
-for _, ins := range engine.Dis(code, addr, insCount) {
+insns, err := engine.Dis(code, addr, insCount)
+for _, ins := range insns {
     fmt.Printf("%#x: %s %s\n", ins.Addr(), ins.Mnemonic(), ins.OpStr())
 }
 ```
